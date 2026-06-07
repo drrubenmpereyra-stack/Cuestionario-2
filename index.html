@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación Encuentro 2 - Clínica de la Convergencia</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            background-color: #000000; 
+            font-family: Arial, sans-serif; 
+            color: #ffffff; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        #app-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            border: 1.5px solid #D4AF37;
+            background: #050508;
+            padding: 30px;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+        }
+        .app-title {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: #D4AF37;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+        .app-subtitle {
+            font-size: 11px;
+            color: #8a8b8c;
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-card {
+            background: #050508;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 30px;
+            margin-bottom: 25px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        .question-card.active { display: block; }
+
+        .question-meta {
+            font-family: monospace;
+            font-size: 12px;
+            color: #7b2cbf;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .question-text {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            font-weight: bold;
+            color: #cbd5e1;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .option-item {
+            background: #000000;
+            border: 1px solid #334155;
+            padding: 14px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+        .option-item:hover {
+            border-color: #64748b;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .option-item.selected {
+            border-color: #D4AF37;
+            background: rgba(212, 175, 55, 0.03);
+        }
+        .option-prefix {
+            font-family: monospace;
+            font-weight: bold;
+            color: #D4AF37;
+        }
+
+        .options-list.locked .option-item {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .options-list.locked .option-item.selected { opacity: 1; }
+        .options-list.locked .option-item.correct-answer {
+            border-color: #00FF88 !important;
+            background: rgba(0, 255, 136, 0.04) !important;
+            opacity: 1;
+        }
+        .options-list.locked .option-item.wrong-answer {
+            border-color: #ff2a5f !important;
+            background: rgba(255, 42, 95, 0.04) !important;
+        }
+
+        .feedback-container {
+            display: none;
+            padding: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 20px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .feedback-container.success {
+            display: block;
+            background: #000000;
+            border: 1.5px solid #00FF88;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+        }
+        .feedback-container.error {
+            display: block;
+            background: #000000;
+            border: 1.5px solid #ff2a5f;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 42, 95, 0.1);
+        }
+        .feedback-header {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .action-btn {
+            background: transparent;
+            border: 1.5px solid #D4AF37;
+            color: #D4AF37;
+            padding: 10px 24px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            background: #D4AF37;
+            color: #000000;
+            box-shadow: 0 0 15px #D4AF37;
+        }
+        .action-btn:disabled {
+            border-color: #475569;
+            color: #475569;
+            cursor: not-allowed;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        #results-card {
+            display: none;
+            background: #050508;
+            border: 2px solid #D4AF37;
+            border-radius: 6px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+        }
+        .score-circle {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 4px solid #D4AF37;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 25px auto;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
+        }
+        .score-num { font-size: 42px; font-weight: bold; font-family: monospace; color: #D4AF37; }
+        .score-label { font-size: 10px; color: #8a8b8c; text-transform: uppercase; margin-top: 2px; }
+        .dictamen-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-width: 650px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div class="app-header">
+            <h1 class="app-title">Clínica de la Convergencia</h1>
+            <p class="app-subtitle">Módulo de Evaluación: Memoria Traumática y El A Posteriori (Encuentro 2)</p>
+        </div>
+
+        <div id="quiz-viewport"></div>
+
+        <div id="results-card">
+            <h2 class="app-title" style="font-size: 22px;">Protocolo Cerrado</h2>
+            <p class="app-subtitle" style="color: #64748b;">Mapeo de Integración Clínico-Neurobiológica del Trauma</p>
+            <div class="score-circle">
+                <span id="final-score" class="score-num">0/10</span>
+                <span class="score-label">Aciertos</span>
+            </div>
+            <div id="final-dictamen" class="dictamen-text"></div>
+            <button class="action-btn" style="margin-top: 15px;" onclick="reiniciarQuiz()">Reiniciar Evaluación</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                q: "A la luz de la neurociencia aplicada, ¿cómo se redefine el concepto freudiano de Nachträglichkeit (el a posteriori o significación diferida)? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "Como una obliteración total de las huellas sinápticas en la corteza occipital.",
+                    "Como el momento de la recuperación y reactivación de la memoria, donde un estímulo actual evoca la memoria implícita lábil del trauma, haciéndola revivir somáticamente.",
+                    "Como la transcripción pasiva de datos grabados de manera inmutable en el hipocampo preverbal.",
+                    "Como un proceso puramente imaginario que carece de cualquier tipo de correlato o red neuronal dinámica."
+                ],
+                correct: 1,
+                feedbackSuccess: "¡Excelente! Desde la convergencia, el 'segundo tiempo' freudiano coincide con la reactivación de la memoria. El trauma no es un archivo estático; al ser evocado por un disparador actual, el sujeto lo 'revive' en un presente continuo emocional y somático.",
+                feedbackFail: "Orientación: Revisa la introducción del texto. El a posteriori demuestra que la memoria es una red neuronal dinámica. El trauma adquiere su carácter desestabilizador en un segundo tiempo al ser recuperado por el sistema asociativo."
+            },
+            {
+                q: "¿Qué interjuego estructural y neurobiológico explica la 'ausencia de relato' lineal o autobiográfico en un paciente traumatizado? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "La hiperactivación del putamen acoplada a una secreción masiva de dopamina por error de predicción.",
+                    "Un secuestro amigdalino con hiperactivación límbica y una inhibición simultánea del hipocampo por exceso de cortisol.",
+                    "Una parálisis psicomotora pura disparada por receptores D2 de la vía indirecta.",
+                    "La estimulación selectiva de las áreas del lenguaje de Broca y Wernicke."
+                ],
+                correct: 1,
+                feedbackSuccess: "¡Correcto! Durante el evento traumático, la amígdala se hiperactiva para registrar el peligro (memoria implícita), mientras que los niveles elevados de cortisol inhiben al hipocampo, impidiendo que este indexe espacio-temporalmente la experiencia y construya un relato lineal.",
+                feedbackFail: "Orientación: Analiza el apartado sobre la Falla en la Construcción del Relato. La disociación neurobiológica entre la amígdala (emoción/terror) y el hipocampo (contexto/tiempo) es la causa directa de las lagunas o el relato fragmentado."
+            },
+            {
+                q: "Las intrusiones somáticas fragmentadas en el consultorio (ataques de pánico, acting out, angustia desbordante sin causa aparente) son expresiones clínicas de: [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "La consolidación exitosa de la memoria explícita y declarativa hipocámpica.",
+                    "El procesamiento top-down maduro de la corteza prefrontal medial.",
+                    "La memoria implícita almacenada de forma aislada por la amígdala, que registró el terror y las respuestas autonómicas del trauma.",
+                    "Un intento consciente del Yo por desviar la atención del analista hacia quejas impersonales."
+                ],
+                correct: 2,
+                feedbackSuccess: "¡Brillante! Dado que el hipocampo fue inhibido, la amígdala resguarda de manera aislada los componentes perceptivos y autonómicos fragmentados del terror primitivo. El cuerpo actúa e irrumpe con lo que el aparato psíquico no pudo simbolizar.",
+                feedbackFail: "Orientación: Observa la Figura 1 y el texto contiguo. Las intrusiones somáticas representan la irrupción de memorias implícitas guardadas por la amígdala bajo alto estrés, que emergen en el presente clínico desprovistas de coordenadas de tiempo y lugar."
+            },
+            {
+                q: "Al abordar clínicamente la memoria traumática, ¿por qué la asociación libre clásica y dispersa puede resultar contraproducente o re-traumatizante? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "Porque borra de forma permanente los recuerdos útiles del hipocampo.",
+                    "Porque puede activar la amígdala de forma masiva e inundar al paciente con afecto inasimilable, sin la debida contención y regulación cortical.",
+                    "Porque disminuye los niveles de cortisol por debajo del rango homeostático basal.",
+                    "Porque fuerza la sobreactivación deliberada de la corteza prefrontal ventrolateral derecha."
+                ],
+                correct: 1,
+                feedbackSuccess: "¡Exacto! En traumas rígidos, la dispersión asociativa rompe la ventana de tolerancia biológica del sujeto. Activa la alarma amigdalina sin un anclaje regulador, provocando una re-traumatización en lugar de una reconfiguración sináptica.",
+                feedbackFail: "Orientación: Revisa la sección de Intervenciones sobre Memorias Implícitas. El psicoanálisis focalizado de la convergencia exige un manejo técnico regulado y estructurado para no desbordar el sistema nervioso autónomo del analizado."
+            },
+            {
+                q: "¿En qué consiste la intervención inicial de 'Rastreo Somático y Contención' (abordaje Bottom-Up)? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "En exigirle al paciente que detalle minuciosamente la cronología histórica del impacto.",
+                    "En interpretar de inmediato el significado inconsciente del síntoma conversivo.",
+                    "En observar y regular las manifestaciones corporales autonómicas (respiración, tensión) para devolver al paciente a su ventana de tolerancia antes de verbalizar.",
+                    "En sobreactivar la vía directa estriatal mediante una confrontación técnica."
+                ],
+                correct: 2,
+                feedbackSuccess: "¡Respuesta correcta! El enfoque Bottom-Up prioriza la estabilización neurovegetativa. Antes de pedir un relato verbal, el clínico lee y co-regula el cuerpo (frenando la taquipnea o tensión muscular), restableciendo la seguridad en el sistema nervioso.",
+                feedbackFail: "Orientación: Revisa la Estrategia 1 del abordaje en el consultorio. No se puede trabajar con la corteza si el subcórtex está en un estado de alarma biológica extrema. Primero se contiene el cuerpo; luego se accede a la palabra."
+            },
+            {
+                q: "¿Cómo se define la estrategia analítica de 'Titulación del Afecto' o pendulación? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "Exponer al paciente a una inundación afectiva prolongada hasta agotar sus reservas de cortisol.",
+                    "Un acercamiento gradual y pendular que permite al paciente tocar dosis mínimas del núcleo traumático (foco amigdalino) para luego guiarlo de regreso a la seguridad del aquí y ahora.",
+                    "Ignorar el material doloroso y desviar sistemáticamente la sesión hacia el encuadre administrativo.",
+                    "Provocar una disociación artificial mediante el uso de la prosodia inversa."
+                ],
+                correct: 1,
+                feedbackSuccess: "¡Excelente análisis! La titulación opera dosificando la reactivación de la huella. El analista permite que el paciente explore brevemente la zona del dolor (labilización de la memoria) pero interrumpe el desborde regresando de inmediato a la estabilidad relacional de la transferencia.",
+                feedbackFail: "Orientación: Observa la Figura 2 y los apartados técnicos. La pendulación clínica evita el secuestro amigdalino absoluto al alternar breves activaciones de la huella con el retorno seguro al anclaje espaciotemporal actual."
+            },
+            {
+                q: "A nivel neurobiológico, ¿cuál es el objetivo primordial de la 'Traducción Prefrontal' tras haber regulado la alerta somática del paciente? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "Estimular las vías inhibitorias desde la corteza prefrontal medial hacia la amígdala aportando palabras a las sensaciones corporales.",
+                    "Aumentar la fijeza inmutable de los guiones motores del putamen.",
+                    "Inhibir la producción de oxitocina para consolidar el error de predicción negativo.",
+                    "Evitar que el hipocampo asocie el hecho doloroso con el pasado histórico."
+                ],
+                correct: 0,
+                feedbackSuccess: "¡Perfecto! Al aportar palabras precisas para nombrar las sensaciones corporales ('Esto que sientes en el pecho hoy es el miedo de ayer'), se enciende el córtex prefrontal medial. Esto activa la regulación top-down que modula y frena la alarma amigdalina.",
+                feedbackFail: "Orientación: Revisa la Estrategia 3 (Traducción Prefrontal). La nominación y simbolización cambian el código de procesamiento del sistema nervioso, transfiriendo la energía desde el automatismo subcortical hacia la integración cortical."
+            },
+            {
+                q: "Durante el proceso de reconsolidación de la memoria, ¿cuánto tiempo permanece inestable, plástica y lábil una huella mnémica una vez que ha sido evocada en el consultorio? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "Aproximadamente de 4 a 6 horas, período en el cual requiere sintetizar nuevas proteínas para volver a almacenarse.",
+                    "Menos de 30 milisegundos, clausurándose antes de cualquier intervención prefrontal.",
+                    "Exactamente 72 horas operando de forma aislada bajo el control del globo pálido.",
+                    "La huella mnémica nunca se vuelve inestable; es una estructura rígida que se hereda inalterable."
+                ],
+                correct: 0,
+                feedbackSuccess: "¡Magnífico! El descubrimiento de la ventana de reconsolidación (4 a 6 horas) es el mayor respaldo científico a la psicoterapia. Al reactivar el trauma en sesión, la huella se vuelve maleable, abriendo la oportunidad única de modificar su carga afectiva antes de que vuelva a fijarse.",
+                feedbackFail: "Orientación: Estudia el apartado de la Reconsolidación de la Huella Mnémica. Esa ventana temporal de labilidad proteica es el núcleo cinético de la mutación clínica y de la cura por la palabra."
+            },
+            {
+                q: "¿Qué condición técnica fundamental define al 'Reactivación Mismatch' (Desajuste) para posibilitar la reescritura de una red neuronal traumática? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "Confirmar la expectativa catastrófica del paciente mediante una respuesta punitiva contratransferencial.",
+                    "Que la experiencia actual en el consultorio (presencia activa, contenidista y empática) contradiga drásticamente las expectativas de peligro e indefensión de la memoria original.",
+                    "Mantener una neutralidad fría y distante que replique el abandono materno histórico.",
+                    "Forzar un pasaje al acto para verificar la resistencia yoica del analizado."
+                ],
+                correct: 1,
+                feedbackSuccess: "¡Extraordinario! Si la memoria implícita dicta 'estoy indefenso y en peligro', y el terapeuta ofrece un encuadre seguro, sintonía afectiva y lectura compasiva, el cerebro experimenta un desajuste o mismatch. Esa discrepancia de información es la que reescribe la red sináptica.",
+                feedbackFail: "Orientación: Analiza las claves de la reconsolidación terapéutica y la Figura 3. El desajuste es la pieza clave: si la realidad del consultorio es idéntica al trauma del pasado, la huella se consolida igual de destructiva; se requiere el contraste relacional para curar."
+            },
+            {
+                q: "Al finalizar con éxito un proceso de reconsolidación terapéutica (Caso Martín), ¿cuál es el cambio estructural alcanzado sobre la huella mnémica? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
+                options: [
+                    "La amígdala olvida por completo el hecho y se borra la experiencia del cerebro.",
+                    "El evento deja de ser un presente perpetuo de peligro que invade al sujeto (acting) para integrarse como un relato narrativo, transformándose en un hecho doloroso pero circunscrito al pasado.",
+                    "Se produce un síntoma de conversión histérica crónico que encapsula el cortisol.",
+                    "El procesamiento migra definitivamente desde las zonas flexibles de la corteza hacia las zonas ciegas del putamen."
+                ],
+                correct: 1,
+                feedbackSuccess: "¡Espectacular respuesta final! El objetivo de la convergencia no es la amnesia (la amígdala no olvida la alerta), sino la historicidad. Al integrar el afecto amigdalino con la narrativa cortical e hipocampica, el trauma pierde su carácter de amenaza actual y se inscribe como memoria histórica.",
+                feedbackFail: "Orientación: Revisa las conclusiones del caso clínico de Martín y el eje 'Del Acting a la Historicidad'. La transformación radica en quitarle al trauma su capacidad de irrumpir en el presente del cuerpo, otorgándole coordenadas cronológicas claras de pasado."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let score = 0;
+
+        function inicializarQuiz() {
+            const viewport = document.getElementById('quiz-viewport');
+            viewport.innerHTML = "";
+            document.getElementById('results-card').style.display = "none";
+
+            quizData.forEach((data, index) => {
+                const card = document.createElement('div');
+                card.className = `question-card ${index === 0 ? 'active' : ''}`;
+                card.id = `card-${index}`;
+
+                let optionsHtml = "";
+                data.options.forEach((opt, oIdx) => {
+                    const prefix = String.fromCharCode(65 + oIdx);
+                    optionsHtml += `
+                        <div class="option-item" onclick="seleccionarOpcion(${index}, ${oIdx})">
+                            <span class="option-prefix">${prefix})</span>
+                            <span class="option-text-val">${opt}</span>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="question-meta">Dimensión Epistemológica: Hito ${index + 1} de ${quizData.length}</div>
+                    <div class="question-text">${data.q}</div>
+                    <div class="options-list" id="options-${index}">
+                        ${optionsHtml}
+                    </div>
+                    <div class="feedback-container" id="feedback-${index}"></div>
+                    <div class="control-row">
+                        <button class="action-btn" id="btn-${index}" disabled onclick="procesarRespuesta(${index})">Validar Maniobra Técnica</button>
+                    </div>
+                `;
+                viewport.appendChild(card);
+            });
+            
+            currentQuestionIndex = 0;
+            userAnswers = new Array(quizData.length).fill(null);
+            score = 0;
+        }
+
+        function seleccionarOpcion(qIdx, oIdx) {
+            userAnswers[qIdx] = oIdx;
+            const container = document.getElementById(`options-${qIdx}`);
+            const items = container.getElementsByClassName('option-item');
+            
+            for (let item of items) { item.classList.remove('selected'); }
+            items[oIdx].classList.add('selected');
+            document.getElementById(`btn-${qIdx}`).disabled = false;
+        }
+
+        function procesarRespuesta(qIdx) {
+            const selected = userAnswers[qIdx];
+            const correct = quizData[qIdx].correct;
+            const optionsContainer = document.getElementById(`options-${qIdx}`);
+            const feedbackBox = document.getElementById(`feedback-${qIdx}`);
+            const actionBtn = document.getElementById(`btn-${qIdx}`);
+            const items = optionsContainer.getElementsByClassName('option-item');
+
+            optionsContainer.classList.add('locked');
+
+            if (selected === correct) {
+                score++;
+                items[selected].classList.add('correct-answer');
+                feedbackBox.className = "feedback-container success";
+                feedbackBox.innerHTML = `<div class="feedback-header">✓ Refuerzo Clínico-Neurobiológico</div><div>${quizData[qIdx].feedbackSuccess}</div>`;
+            } else {
+                items[selected].classList.add('wrong-answer');
+                items[correct].classList.add('correct-answer');
+                feedbackBox.className = "feedback-container error";
+                feedbackBox.innerHTML = `<div class="feedback-header">⚠️ Línea de Orientación Técnica</div><div>${quizData[qIdx].feedbackFail}</div>`;
+            }
+
+            if (qIdx < quizData.length - 1) {
+                actionBtn.innerText = "Siguiente Dimensión →";
+                actionBtn.onclick = () => avanzarPregunta(qIdx);
+            } else {
+                actionBtn.innerText = "Cerrar Protocolo";
+                actionBtn.onclick = () => mostrarResultadosFinales();
+            }
+        }
+
+        function avanzarPregunta(qIdx) {
+            document.getElementById(`card-${qIdx}`).classList.remove('active');
+            currentQuestionIndex++;
+            document.getElementById(`card-${currentQuestionIndex}`).classList.add('active');
+        }
+
+        function mostrarResultadosFinales() {
+            document.getElementById(`card-${quizData.length - 1}`).classList.remove('active');
+            
+            const resultsCard = document.getElementById('results-card');
+            const scoreNum = document.getElementById('final-score');
+            const dictamenBox = document.getElementById('final-dictamen');
+            
+            scoreNum.innerText = `${score}/${quizData.length}`;
+            resultsCard.style.display = "block";
+
+            let dictamen = "";
+            if (score >= 9) {
+                dictamen = "<strong>Dictamen: Integración Neuro-Analítica Avanzada.</strong> El evaluado demuestra un dominio pericial sobresaliente en el manejo de memorias implícitas y en la sincronización técnica de la ventana de reconsolidación de la huella mnémica. Su enfoque Bottom-Up y la aplicación del mismatch relacional son óptimos para evitar la re-traumatización.";
+            } else if (score >= 7) {
+                dictamen = "<strong>Dictamen: Aptitud Clínica Regularizada.</strong> Comprensión correcta del interjuego límbico-hipocámpico y la modulación por el a posteriori. Se aconseja profundizar en los tiempos precisos de la titulación del afecto y en la dosificación interpretativa para blindar el encuadre.";
+            } else {
+                dictamen = "<strong>Dictamen: Auditoría y Ajuste Técnico Obligatorio.</strong> Se detectan desvíos metodológicos de riesgo al persistir en la asociación libre clásica ante picos de secuestro amigdalino, ignorando el correlato somático de la memoria traumática. Se prescribe un re-estudio integral del Encuentro 2 y del caso clínico de Martín.";
+            }
+            
+            dictamenBox.innerHTML = dictamen;
+        }
+
+        function reiniciarQuiz() {
+            inicializarQuiz();
+        }
+
+        window.onload = inicializarQuiz;
+    </script>
+</body>
+</html>
