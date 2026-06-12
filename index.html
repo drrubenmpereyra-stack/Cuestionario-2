@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluación Encuentro 2 - Clínica de la Convergencia</title>
+    <head>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { 
@@ -239,8 +243,22 @@
             <button class="action-btn" style="margin-top: 15px;" onclick="reiniciarQuiz()">Reiniciar Evaluación</button>
         </div>
     </div>
-
+<div id="identificacion-card" style="border: 2px solid #D4AF37; padding: 20px; text-align: center; margin-bottom: 20px; background-color: #f9f9f9;">
+    <h3 style="margin-top: 0;">Identificación del Estudiante</h3>
+    <input type="text" id="input-nombre" placeholder="Ingresa tu nombre y apellido" required style="padding: 10px; width: 80%; border: 1px solid #ccc; border-radius: 4px;">
+</div>
     <script>
+        const firebaseConfig = {
+    apiKey: "AIzaSyD47_2UtWLFI_VRVvvXVAqn4zZzZ4d1ggo",
+    authDomain: "av-clinica-convergencia.firebaseapp.com",
+    databaseURL: "https://av-clinica-convergencia-default-rtdb.firebaseio.com",
+    projectId: "av-clinica-convergencia",
+    storageBucket: "av-clinica-convergencia.firebasestorage.app",
+    messagingSenderId: "939404425675",
+    appId: "1:939404425675:web:8cfae157099efabd741e4e"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.firestore();
         const quizData = [
             {
                 q: "A la luz de la neurociencia aplicada, ¿cómo se redefine el concepto freudiano de Nachträglichkeit (el a posteriori o significación diferida)? [Referencia: Encuentro 2_Texto 1 parte.pdf]",
@@ -455,7 +473,15 @@
             document.getElementById(`card-${currentQuestionIndex}`).classList.add('active');
         }
 
-        function mostrarResultadosFinales() {
+       function mostrarResultadosFinales() {
+            const nombreIngresado = document.getElementById('input-nombre').value;
+            
+            if (!nombreIngresado || nombreIngresado.trim() === "") {
+                alert("Por favor, ingresa tu nombre y apellido antes de finalizar.");
+                return;
+            }
+
+            // Ocultamos la última tarjeta
             document.getElementById(`card-${quizData.length - 1}`).classList.remove('active');
             
             const resultsCard = document.getElementById('results-card');
@@ -465,18 +491,32 @@
             scoreNum.innerText = `${score}/${quizData.length}`;
             resultsCard.style.display = "block";
 
+            // Lógica de dictamen que faltaba
             let dictamen = "";
             if (score >= 9) {
-                dictamen = "<strong>Dictamen: Integración Neuro-Analítica Avanzada.</strong> El evaluado demuestra un dominio pericial sobresaliente en el manejo de memorias implícitas y en la sincronización técnica de la ventana de reconsolidación de la huella mnémica. Su enfoque Bottom-Up y la aplicación del mismatch relacional son óptimos para evitar la re-traumatización.";
+                dictamen = "<strong>Dictamen: Integración Clínico-Alostática de Excelencia.</strong> Dominio absoluto sobre la modulación psicodinámica.";
             } else if (score >= 7) {
-                dictamen = "<strong>Dictamen: Aptitud Clínica Regularizada.</strong> Comprensión correcta del interjuego límbico-hipocámpico y la modulación por el a posteriori. Se aconseja profundizar en los tiempos precisos de la titulación del afecto y en la dosificación interpretativa para blindar el encuadre.";
+                dictamen = "<strong>Dictamen: Idoneidad Clínica Convalidada.</strong> Comprensión clara de los mecanismos neuroendocrinos.";
             } else {
-                dictamen = "<strong>Dictamen: Auditoría y Ajuste Técnico Obligatorio.</strong> Se detectan desvíos metodológicos de riesgo al persistir en la asociación libre clásica ante picos de secuestro amigdalino, ignorando el correlato somático de la memoria traumática. Se prescribe un re-estudio integral del Encuentro 2 y del caso clínico de Martín.";
+                dictamen = "<strong>Dictamen: Revisión Técnica Prescripta.</strong> Se observa una tendencia a priorizar interpretaciones genéticas abstractas.";
             }
-            
             dictamenBox.innerHTML = dictamen;
-        }
 
+            // Envío a Firestore
+            db.collection("resultados").add({
+                alumno: nombreIngresado,
+                test_numero: "Test 2",
+                nota: score + "/10",
+                fecha: new Date().toLocaleString()
+            })
+            .then(() => {
+                dictamenBox.innerHTML += `<p style="color: #00FF88; margin-top: 15px;">✓ Resultados guardados en el sistema.</p>`;
+            })
+            .catch((error) => {
+                console.error("Error al guardar:", error);
+                dictamenBox.innerHTML += `<p style="color: #FF0000; margin-top: 15px;">X Error al guardar en la base de datos.</p>`;
+            });
+        }
         function reiniciarQuiz() {
             inicializarQuiz();
         }
@@ -485,3 +525,4 @@
     </script>
 </body>
 </html>
+
