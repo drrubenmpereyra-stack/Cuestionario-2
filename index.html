@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluación Encuentro 2 - Clínica de la Convergencia</title>
-    <head>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-</head>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { 
@@ -243,10 +241,11 @@
             <button class="action-btn" style="margin-top: 15px;" onclick="reiniciarQuiz()">Reiniciar Evaluación</button>
         </div>
     </div>
-<div id="identificacion-card" style="border: 2px solid #D4AF37; padding: 20px; text-align: center; margin-bottom: 20px; background-color: #f9f9f9;">
+    <div id="identificacion-card" style="border: 2px solid #D4AF37; padding: 20px; text-align: center; margin-bottom: 20px; background-color: #f9f9f9;">
     <h3 style="margin-top: 0;">Identificación del Estudiante</h3>
     <input type="text" id="input-nombre" placeholder="Ingresa tu nombre y apellido" required style="padding: 10px; width: 80%; border: 1px solid #ccc; border-radius: 4px;">
 </div>
+
     <script>
         const firebaseConfig = {
     apiKey: "AIzaSyD47_2UtWLFI_VRVvvXVAqn4zZzZ4d1ggo",
@@ -473,50 +472,29 @@ const db = firebase.firestore();
             document.getElementById(`card-${currentQuestionIndex}`).classList.add('active');
         }
 
-       function mostrarResultadosFinales() {
-            const nombreIngresado = document.getElementById('input-nombre').value;
-            
-            if (!nombreIngresado || nombreIngresado.trim() === "") {
-                alert("Por favor, ingresa tu nombre y apellido antes de finalizar.");
-                return;
-            }
+        function mostrarResultadosFinales() {
+    const nombreIngresado = document.getElementById('input-nombre').value;
+    if (!nombreIngresado || nombreIngresado.trim() === "") {
+        alert("Por favor, ingresa tu nombre y apellido antes de finalizar.");
+        return;
+    }
+    document.getElementById(`card-${quizData.length - 1}`).classList.remove('active');
+    const resultsCard = document.getElementById('results-card');
+    const dictamenBox = document.getElementById('final-dictamen');
+    document.getElementById('final-score').innerText = `${score}/${quizData.length}`;
+    resultsCard.style.display = "block";
+    let dictamen = (score >= 9) ? "<strong>Dictamen: Integración Clínico-Alostática de Excelencia.</strong>" : (score >= 7) ? "<strong>Dictamen: Idoneidad Clínica Convalidada.</strong>" : "<strong>Dictamen: Revisión Técnica Prescripta.</strong>";
+    dictamenBox.innerHTML = dictamen;
+    db.collection("resultados").add({
+        alumno: nombreIngresado,
+        test_numero: "Test 2",
+        nota: score + "/10",
+        fecha: new Date().toLocaleString()
+    }).then(() => {
+        dictamenBox.innerHTML += `<p style="color: #00FF88; margin-top: 15px;">✓ Resultados guardados en el sistema.</p>`;
+    }).catch((error) => console.error("Error:", error));
+}
 
-            // Ocultamos la última tarjeta
-            document.getElementById(`card-${quizData.length - 1}`).classList.remove('active');
-            
-            const resultsCard = document.getElementById('results-card');
-            const scoreNum = document.getElementById('final-score');
-            const dictamenBox = document.getElementById('final-dictamen');
-            
-            scoreNum.innerText = `${score}/${quizData.length}`;
-            resultsCard.style.display = "block";
-
-            // Lógica de dictamen que faltaba
-            let dictamen = "";
-            if (score >= 9) {
-                dictamen = "<strong>Dictamen: Integración Clínico-Alostática de Excelencia.</strong> Dominio absoluto sobre la modulación psicodinámica.";
-            } else if (score >= 7) {
-                dictamen = "<strong>Dictamen: Idoneidad Clínica Convalidada.</strong> Comprensión clara de los mecanismos neuroendocrinos.";
-            } else {
-                dictamen = "<strong>Dictamen: Revisión Técnica Prescripta.</strong> Se observa una tendencia a priorizar interpretaciones genéticas abstractas.";
-            }
-            dictamenBox.innerHTML = dictamen;
-
-            // Envío a Firestore
-            db.collection("resultados").add({
-                alumno: nombreIngresado,
-                test_numero: "Test 2",
-                nota: score + "/10",
-                fecha: new Date().toLocaleString()
-            })
-            .then(() => {
-                dictamenBox.innerHTML += `<p style="color: #00FF88; margin-top: 15px;">✓ Resultados guardados en el sistema.</p>`;
-            })
-            .catch((error) => {
-                console.error("Error al guardar:", error);
-                dictamenBox.innerHTML += `<p style="color: #FF0000; margin-top: 15px;">X Error al guardar en la base de datos.</p>`;
-            });
-        }
         function reiniciarQuiz() {
             inicializarQuiz();
         }
